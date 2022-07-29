@@ -3,7 +3,7 @@ import sys
 from PIL import Image, ImageFilter, ImageDraw, ImageFont
 
 
-OVERLAP = 0.15
+OVERLAP = 0.16
 
 def get_data() -> dict:
     return json.load(sys.stdin)
@@ -18,18 +18,16 @@ artifacts = [chars[x]["sets"] for x in range(len(chars))]
 
 char_image_shapes = []
 imgs = []
-new_image_width = 0
+new_image_width = 900
 new_image_height = 0
 for name in names:
     # imgs.append(Image.open(f"images/avatar/trimmed/{name}_trimmed.png"))
     imgs.append(Image.open(f"images/avatar/{name}.png"))
     char_image_shapes.append(imgs[-1].size)
-    if new_image_width == 0:
-        new_image_width = char_image_shapes[-1][0]
+    if new_image_height == 0:
         new_image_height = char_image_shapes[-1][1]
-    else:
-        new_image_width += int(char_image_shapes[-1][1] * (1-OVERLAP))
-base_img = Image.new("RGBA", (new_image_width, int(new_image_height*1.5)))
+
+base_img = Image.new("RGBA", (new_image_width, int(new_image_height*1.65)))
 
 location = [[0, 0] for _ in range(len(imgs))]
 for i in range(len(imgs)-1):
@@ -166,7 +164,7 @@ Total DPS: {dps['mean']:5.0f} to {data['num_targets']} target{'s' if data['num_t
 DPS min / max / stddev: {dps['min']:.0f} / {dps['max']:.0f} / {dps['sd']:.0f})
 {data['sim_duration']['mean']:.2f}s combat time. {data['iter']} iteration in {(data['runtime']/1e9):.3f}s
 """
-text.text((6, new_image_height-10), info, font = genshin_font, fill = white, align='left')
+text.text((6, new_image_height), info, font = genshin_font, fill = white, spacing = 10)
 
 # shadow = Image.new("RGBA", text_img.size, (255, 255, 255, 255))
 # alpha = text_img.split()[-1]
