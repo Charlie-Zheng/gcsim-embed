@@ -1,38 +1,14 @@
-import gc
 import json
-import gzip
-import zlib
 import sys
-import time
 from PIL import Image, ImageFilter, ImageDraw, ImageFont
 
 
 OVERLAP = 0.15
-start = time.time()
 
-def get_data(filename) -> dict:
-    try:
-        with open(filename, 'rb') as file:
-            data = file.read()
-            try:
-                data = gzip.decompress(data)
-            except:
-                data = zlib.decompress(data)
-            data = json.loads(data)
-            # perform some data validation to make sure the file is a gcsim config
-            debug = json.loads(data["debug"])
-            return data
-    except Exception:
-        err(f"Did not find file \033[1;32m{filename}\033[0m or it is not a valid gcsim output file")
+def get_data() -> dict:
+    return json.load(sys.stdin)
 
-
-def err(msg):
-    print(msg, file=sys.stderr)
-    input("Press Enter to continue...")
-    sys.exit(1)
-
-
-data = get_data("nat.gz")
+data = get_data()
 chars = data["char_details"]
 # print(chars[0])
 names = [(chars[x]["name"] if "traveler" not in chars[x]
@@ -74,9 +50,6 @@ for i in range(len(imgs)-1, -1, -1):
     img = imgs[i]
     base_img.alpha_composite(img, tuple(location[i]))
 
-
-del imgs
-gc.collect()
 # weapons
 # print(weapons)
 imgs: list[Image.Image] = []
@@ -110,8 +83,6 @@ weapon_img = shadow
 
 base_img.alpha_composite(weapon_img,  (0,0))
 
-del imgs
-gc.collect()
 imgs: list[Image.Image] = []
 artifact_image_shapes = []
 ARITFACT_SIZE = 0.4
@@ -190,7 +161,6 @@ for i in range(len(chars)):
 # duration
 # genshin_font_28px = ImageFont.truetype("genshin_font.ttf", 28)
 dps = data["dps"]
-print(f"{data.keys()}")
 info = f"""
 Total DPS: {dps['mean']:5.0f} to {data['num_targets']} target{'s' if data['num_targets'] > 1 else ''} (Avg. Per Target {dps['mean']/data['num_targets']:5.0f})
 DPS min / max / stddev: {dps['min']:.0f} / {dps['max']:.0f} / {dps['sd']:.0f})
@@ -218,9 +188,6 @@ base_img.alpha_composite(text_img)
 base_img = base_img.resize(map(lambda x: int(x*0.6), base_img.size))
 
 base_img.save("test.png")
-print(data["dps"])
 # base_img.show()
 
 
-
-print(f"Total time taken {time.time()-start}")
