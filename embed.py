@@ -53,7 +53,7 @@ for name in names:
         new_image_height = char_image_shapes[-1][1]
     else:
         new_image_width += int(char_image_shapes[-1][1] * (1-OVERLAP))
-base_img = Image.new("RGBA", (new_image_width, int(new_image_height*1.2)))
+base_img = Image.new("RGBA", (new_image_width, int(new_image_height*1.5)))
 
 location = [[0, 0] for _ in range(len(imgs))]
 for i in range(len(imgs)-1):
@@ -93,20 +93,20 @@ for i in range(len(imgs)):
     weapon_img.alpha_composite(img,  (location[i][0] + char_image_shapes[i][0] - int(
         weapon_image_shapes[i][0] * 0.95)-10, new_image_height - weapon_image_shapes[i][1] + 20))
 
-# shadow = Image.new("RGBA", weapon_img.size, (255, 255, 255, 255))
-# alpha = weapon_img.split()[-1]
-# shadow.putalpha(alpha)
-# shadow = shadow.filter(ImageFilter.MaxFilter(5))
-# shadow.alpha_composite(weapon_img)
-# weapon_img = shadow
+shadow = Image.new("RGBA", weapon_img.size, (255, 255, 255, 255))
+alpha = weapon_img.split()[-1]
+shadow.putalpha(alpha)
+shadow = shadow.filter(ImageFilter.MaxFilter(5))
+shadow.alpha_composite(weapon_img)
+weapon_img = shadow
 
-# shadow = Image.new("RGBA", weapon_img.size, (0, 0, 0, 255))
-# alpha = weapon_img.split()[-1]
-# shadow.putalpha(alpha)
-# shadow = shadow.filter(ImageFilter.MaxFilter(7))
-# shadow = shadow.filter(ImageFilter.GaussianBlur(2))
-# shadow.alpha_composite(weapon_img)
-# weapon_img = shadow
+shadow = Image.new("RGBA", weapon_img.size, (0, 0, 0, 255))
+alpha = weapon_img.split()[-1]
+shadow.putalpha(alpha)
+shadow = shadow.filter(ImageFilter.MaxFilter(7))
+shadow = shadow.filter(ImageFilter.GaussianBlur(2))
+shadow.alpha_composite(weapon_img)
+weapon_img = shadow
 
 base_img.alpha_composite(weapon_img,  (0,0))
 
@@ -143,22 +143,22 @@ for arti in artifacts:
         imgs.append(dst)
         artifact_image_shapes.append(imgs[-1].size)
 
-# for i in range(len(imgs)):
-#     shadow = Image.new("RGBA", artifact_image_shapes[i], (255, 255, 255, 255))
-#     alpha = imgs[i].split()[-1]
-#     shadow.putalpha(alpha)
-#     shadow = shadow.filter(ImageFilter.MaxFilter(5))
-#     shadow.alpha_composite(imgs[i])
-#     imgs[i] = shadow
+for i in range(len(imgs)):
+    shadow = Image.new("RGBA", artifact_image_shapes[i], (255, 255, 255, 255))
+    alpha = imgs[i].split()[-1]
+    shadow.putalpha(alpha)
+    shadow = shadow.filter(ImageFilter.MaxFilter(5))
+    shadow.alpha_composite(imgs[i])
+    imgs[i] = shadow
 
-# for i in range(len(imgs)):
-#     shadow = Image.new("RGBA", artifact_image_shapes[i], (0, 0, 0, 255))
-#     alpha = imgs[i].split()[-1]
-#     shadow.putalpha(alpha)
-#     shadow = shadow.filter(ImageFilter.MaxFilter(7))
-#     shadow = shadow.filter(ImageFilter.GaussianBlur(2))
-#     shadow.alpha_composite(imgs[i])
-#     imgs[i] = shadow
+for i in range(len(imgs)):
+    shadow = Image.new("RGBA", artifact_image_shapes[i], (0, 0, 0, 255))
+    alpha = imgs[i].split()[-1]
+    shadow.putalpha(alpha)
+    shadow = shadow.filter(ImageFilter.MaxFilter(7))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(2))
+    shadow.alpha_composite(imgs[i])
+    imgs[i] = shadow
 
 for i in range(len(imgs)):
     img = imgs[i]
@@ -170,6 +170,7 @@ for i in range(len(imgs)):
 blue = (102, 170, 206, 255)
 purple = (154, 112, 197, 255)
 gold = (217, 170, 91, 255)
+white = (255, 255, 255, 255)
 genshin_font = ImageFont.truetype("genshin_font.ttf", 30)
 text_img = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
 text = ImageDraw.Draw(text_img)
@@ -185,6 +186,17 @@ for i in range(len(chars)):
     text.text((location[i][0] + 50, 5), f"C{cons}", font = genshin_font, fill = gold)
     xDescPxl = text.textsize(f"C{cons}", font= genshin_font)[0]
     text.text((location[i][0] + 50 + xDescPxl, 5), f"R{ref}", font = genshin_font, fill = purple)
+
+# duration
+# genshin_font_28px = ImageFont.truetype("genshin_font.ttf", 28)
+dps = data["dps"]
+print(f"{data.keys()}")
+info = f"""
+Total DPS: {dps['mean']:5.0f} to {data['num_targets']} target{'s' if data['num_targets'] > 1 else ''} (Avg. Per Target {dps['mean']/data['num_targets']:5.0f})
+DPS min / max / stddev: {dps['min']:.0f} / {dps['max']:.0f} / {dps['sd']:.0f})
+{data['sim_duration']['mean']:.2f}s combat time. {data['iter']} iteration in {(data['runtime']/1e9):.3f}s
+"""
+text.text((6, new_image_height-10), info, font = genshin_font, fill = white, align='left')
 
 # shadow = Image.new("RGBA", text_img.size, (255, 255, 255, 255))
 # alpha = text_img.split()[-1]
@@ -206,6 +218,7 @@ base_img.alpha_composite(text_img)
 base_img = base_img.resize(map(lambda x: int(x*0.6), base_img.size))
 
 base_img.save("test.png")
+print(data["dps"])
 # base_img.show()
 
 
