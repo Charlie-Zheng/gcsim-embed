@@ -187,7 +187,12 @@ base_img.alpha_composite(text_img)
 
 base_img = base_img.resize(map(lambda x: int(x*0.6), base_img.size))
 
-base_img.save("test.png")
+output_filename = "output.png"
+if len(sys.argv) > 1:
+    output_filename = sys.argv[1]
+    if not output_filename.endswith(".png"):
+        output_filename+=(".png")
+base_img.save(output_filename)
 # base_img.show()
 
 
