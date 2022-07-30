@@ -161,7 +161,7 @@ for i in range(len(chars)):
 dps = data["dps"]
 info = f"""
 Total DPS: {dps['mean']:5.0f} to {data['num_targets']} target{'s' if data['num_targets'] > 1 else ''} (Avg. Per Target {dps['mean']/data['num_targets']:5.0f})
-DPS min / max / stddev: {dps['min']:.0f} / {dps['max']:.0f} / {dps['sd']:.0f})
+DPS min / max / stddev: {dps['min']:.0f} / {dps['max']:.0f} / {dps['sd']:.0f}
 {data['sim_duration']['mean']:.2f}s combat time. {data['iter']} iteration in {(data['runtime']/1e9):.3f}s
 """
 text.text((6, new_image_height), info, font = genshin_font, fill = white, spacing = 10)
