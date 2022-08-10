@@ -1,10 +1,19 @@
 import json
+import os
 import sys
 from PIL import Image, ImageFilter, ImageDraw, ImageFont
 
 
 OVERLAP = 0.16
 
+images_folder = "images"
+font_folder = ""
+if len(sys.argv) > 2:
+    images_folder = os.path.abspath(sys.argv[2])
+
+if len(sys.argv) > 3:
+    font_folder = os.path.abspath(sys.argv[3])
+print(f"Loading images from {images_folder}\nLoading font from {font_folder}")
 def get_data() -> dict:
     return json.load(sys.stdin)
 
@@ -19,16 +28,12 @@ artifacts = [chars[x]["sets"] for x in range(len(chars))]
 char_image_shapes = []
 imgs = []
 new_image_width = 900
-new_image_height = 0
+new_image_height = 422
 for name in names:
-    # imgs.append(Image.open(f"images/avatar/trimmed/{name}_trimmed.png"))
-    imgs.append(Image.open(f"images/avatar/{name}.png"))
-    char_image_shapes.append(imgs[-1].size)
-    if new_image_height == 0:
-        new_image_height = char_image_shapes[-1][1]
+    imgs.append(Image.open(os.path.join(images_folder, f"avatar/{name}.png")))
+    char_image_shapes.append((256, 256))
 
-base_img = Image.new("RGBA", (new_image_width, int(new_image_height*1.65)))
-
+base_img = Image.new("RGBA", (new_image_width, new_image_height))
 location = [[0, 0] for _ in range(len(imgs))]
 for i in range(len(imgs)-1):
     location[i+1][0] = location[i][0] + \
@@ -50,19 +55,20 @@ for i in range(len(imgs)-1, -1, -1):
 
 # weapons
 # print(weapons)
+weapon_size = (180,180)
 imgs: list[Image.Image] = []
 weapon_image_shapes = []
 for weapon in weapons:
-    imgs.append(Image.open(f"images/weapons/{weapon['name']}.png"))
+    
+    imgs.append(Image.open(os.path.join(images_folder, f"weapons/{weapon['name']}.png")))
     width, height = imgs[-1].size
-    imgs[-1] = imgs[-1].resize((int(width*0.7), int(height*0.7)))
+    imgs[-1] = imgs[-1].resize(weapon_size)
     weapon_image_shapes.append(imgs[-1].size)
 
 weapon_img = Image.new("RGBA", base_img.size, (0,0,0,0))
 for i in range(len(imgs)):
     img = imgs[i]
-    weapon_img.alpha_composite(img,  (location[i][0] + char_image_shapes[i][0] - int(
-        weapon_image_shapes[i][0] * 0.95)-10, new_image_height - weapon_image_shapes[i][1] + 20))
+    weapon_img.alpha_composite(img,  (location[i][0] + char_image_shapes[i][0] - int(weapon_image_shapes[i][0] * 0.95)-10, char_image_shapes[i][1] - weapon_image_shapes[i][1] + 20))
 
 shadow = Image.new("RGBA", weapon_img.size, (255, 255, 255, 255))
 alpha = weapon_img.split()[-1]
@@ -83,7 +89,7 @@ base_img.alpha_composite(weapon_img,  (0,0))
 
 imgs: list[Image.Image] = []
 artifact_image_shapes = []
-ARITFACT_SIZE = 0.4
+ARITFACT_SIZE = (100,100)
 for arti in artifacts:
     arti = {key: val for key, val in arti.items() if val >= 2}
 
@@ -91,20 +97,21 @@ for arti in artifacts:
     total_sets = len(sets)
     # print(sets)
     if total_sets == 1:
-        imgs.append(Image.open(f"images/artifacts/{sets[0]}_flower.png"))
+       
+        imgs.append(Image.open(os.path.join(images_folder, f"artifacts/{sets[0]}_flower.png")))
         width, height = imgs[-1].size
-        imgs[-1] = imgs[-1].resize((int(width*ARITFACT_SIZE), int(height*ARITFACT_SIZE)))
+        imgs[-1] = imgs[-1].resize(ARITFACT_SIZE)
         artifact_image_shapes.append(imgs[-1].size)
     elif total_sets == 2:
-        img0 = Image.open(f"images/artifacts/{sets[0]}_flower.png")
+        img0 = Image.open(os.path.join(images_folder, f"artifacts/{sets[0]}_flower.png"))
         width, height = img0.size
-        img0 = img0.resize((int(width*ARITFACT_SIZE), int(height*ARITFACT_SIZE)))
+        img0 = img0.resize(ARITFACT_SIZE)
         img0 = img0.crop((0, 0, int(width*ARITFACT_SIZE)//2, int(height*ARITFACT_SIZE)))
 
-        img1 = Image.open(f"images/artifacts/{sets[1]}_flower.png")
+        img1 = Image.open(os.path.join(images_folder, f"artifacts/{sets[1]}_flower.png"))
         width, height = img1.size
-        img1 = img1.resize((int(width*ARITFACT_SIZE), int(height*ARITFACT_SIZE)))
-        img1 = img1.crop((int(width*ARITFACT_SIZE)//2, 0, int(width*ARITFACT_SIZE), int(height*ARITFACT_SIZE)))
+        img1 = img1.resize(ARITFACT_SIZE)
+        img1 = img1.crop((ARITFACT_SIZE[0]//2, 0, ARITFACT_SIZE[0], ARITFACT_SIZE[1]))
 
         dst = Image.new("RGBA",(img0.width + img1.width, max(img0.height, img1.height)), (0,0,0,0))
         dst.paste(img0, (0, 0))
@@ -132,7 +139,7 @@ for i in range(len(imgs)):
 for i in range(len(imgs)):
     img = imgs[i]
     base_img.alpha_composite(img,  (location[i][0] + char_image_shapes[i][0] - 
-        artifact_image_shapes[i][0]-10, new_image_height - artifact_image_shapes[i][1] + 40))
+        artifact_image_shapes[i][0]-10, char_image_shapes[i][1] - artifact_image_shapes[i][1] + 40))
     # base_img.alpha_composite(img,  (location[i][0] + 50, new_image_height - artifact_image_shapes[i][1] + 20))
     # base_img.alpha_composite(img,  (location[i][0] + 20, 0))
 
@@ -140,7 +147,7 @@ blue = (102, 170, 206, 255)
 purple = (154, 112, 197, 255)
 gold = (217, 170, 91, 255)
 white = (255, 255, 255, 255)
-genshin_font = ImageFont.truetype("genshin_font.ttf", 30)
+genshin_font = ImageFont.truetype(os.path.join(font_folder, "genshin_font.ttf"), 30)
 text_img = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
 text = ImageDraw.Draw(text_img)
 
@@ -164,7 +171,7 @@ Total DPS: {dps['mean']:5.0f} to {data['num_targets']} target{'s' if data['num_t
 DPS min / max / stddev: {dps['min']:.0f} / {dps['max']:.0f} / {dps['sd']:.0f}
 {data['sim_duration']['mean']:.2f}s combat time. {data['iter']} iteration in {(data['runtime']/1e9):.3f}s
 """
-text.text((6, new_image_height), info, font = genshin_font, fill = white, spacing = 10)
+text.text((6, char_image_shapes[0][1]), info, font = genshin_font, fill = white, spacing = 10)
 
 # shadow = Image.new("RGBA", text_img.size, (255, 255, 255, 255))
 # alpha = text_img.split()[-1]
